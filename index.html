@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOOD BRIDGE — Share food, not waste</title>
+<link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand" onclick="showScreen('home')">
+    <div class="mark"><span>🍚</span></div>
+    FOOD BRIDGE
+  </div>
+  <div id="userChip" style="font-size:12.5px;color:#5C6E62;"></div>
+</div>
+
+<div class="main">
+
+  <!-- HOME -->
+  <section class="screen active" id="screen-home">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">🌿 Rescued today &nbsp;·&nbsp; <span id="pendingCount" class="mono">0</span> plates waiting</div>
+        <h1>Good food shouldn't go to waste. Neither should a good meal.</h1>
+        <p class="lede">FOOD BRIDGE connects people with extra food to verified local receivers who get it to someone who needs it — usually within the hour.</p>
+        <div class="role-row">
+          <button class="role-btn" onclick="showScreen('donor')">I have food to give</button>
+          <button class="role-btn ghost" onclick="showScreen('receiverLogin')">I'm a receiver</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat"><b class="mono" id="statTotal">0</b><span>Donations logged</span></div>
+          <div class="stat"><b class="mono" id="statAccepted">0</b><span>Picked up</span></div>
+          <div class="stat"><b class="mono" id="statReceivers">0</b><span>Partner receivers</span></div>
+        </div>
+      </div>
+      <div class="thali-wrap">
+        <div class="thali">
+          <div class="ring"></div>
+          <div class="core">
+            <b id="thaliCount">0</b>
+            <span>meals shared</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="leaderboard-card" id="leaderboardCard">
+      <div class="leaderboard-head">
+        <h3>🏆 Top donors</h3>
+        <span class="leaderboard-sub">Ranked by number of donations logged</span>
+      </div>
+      <div id="leaderboardList"></div>
+    </div>
+
+    <div class="contact-strip">
+      📩 Want to register your organisation as a receiver?
+      <a href="https://mail.google.com/mail/?view=cm&fs=1&to=chaitunukala31@gmail.com" target="_blank" rel="noopener noreferrer">foodbridgesupport01@gmail.com</a>
+    </div>
+
+    <footer class="notice">Data on this page is shared across everyone using this app — don't submit anything private.</footer>
+  </section>
+
+  <!-- DONOR DETAIL MODAL -->
+  <div class="modal-overlay" id="donorModal" onclick="if(event.target===this) closeDonorModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeDonorModal()" aria-label="Close">✕</button>
+      <h3 id="dmName"></h3>
+      <div class="modal-sub" id="dmCount"></div>
+      <div class="modal-row">
+        <div class="ico">📞</div>
+        <div>
+          <div class="val-label">Phone number</div>
+          <div class="val mono" id="dmPhone"></div>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="ico">📍</div>
+        <div>
+          <div class="val-label">Location</div>
+          <div class="val" id="dmAddress"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DONOR -->
+  <section class="screen" id="screen-donor">
+    <div class="card">
+      <button class="back-link" onclick="showScreen('home')">← Back</button>
+      <h2>Donate food</h2>
+      <p style="font-size:13.5px;color:#5C6E62;margin-top:-4px;margin-bottom:18px;">Takes about a minute. A receiver nearby will be notified.</p>
+
+      <div class="field" id="f-donorname">
+        <label>Your name</label>
+        <input id="donorName" placeholder="e.g. Priya Sharma">
+        <div class="err-msg">Let us know who's donating — it'll show on the donor leaderboard.</div>
+      </div>
+
+      <div class="field" id="f-food">
+        <label>What's the food?</label>
+        <input id="food" placeholder="e.g. Vegetable biryani, 2 trays">
+        <div class="err-msg">Tell us what the food is.</div>
+      </div>
+
+      <div class="field" id="f-category">
+        <label>Food category</label>
+        <select id="category">
+          <option value="Cooked meals">Cooked meals</option>
+          <option value="Groceries & raw ingredients">Groceries &amp; raw ingredients</option>
+          <option value="Bakery & snacks">Bakery &amp; snacks</option>
+          <option value="Fruits & vegetables">Fruits &amp; vegetables</option>
+          <option value="Dairy & beverages">Dairy &amp; beverages</option>
+          <option value="Other">Other</option>
+        </select>
+        <div class="hint">If you select Other, enter the exact food type below.</div>
+      </div>
+
+      <div class="field" id="f-otherfood" style="display:none;">
+        <label>Enter food type</label>
+        <input id="otherFood" placeholder="e.g. Pulihora, homemade snacks">
+        <div class="err-msg">Enter the food type.</div>
+      </div>
+
+      <div class="field" id="f-qty">
+        <label>Quantity</label>
+        <input id="qty" placeholder="e.g. Serves 15 people">
+        <div class="err-msg">Add a rough quantity so receivers know what to expect.</div>
+      </div>
+
+      <div class="field" id="f-address">
+        <label>Pickup address</label>
+        <textarea id="address" rows="2" placeholder="Full address, landmark helps"></textarea>
+        <div class="err-msg">A pickup address is required for navigation.</div>
+      </div>
+
+      <div class="field" id="f-phone">
+        <label>Contact phone</label>
+        <input id="phone" class="mono" inputmode="tel" placeholder="e.g. 9876543210">
+        <div class="hint">No OTP or phone verification is required.</div>
+        <div class="err-msg">Enter a valid phone number.</div>
+      </div>
+
+      <div class="field" id="f-image">
+        <label>Photo of the food</label>
+        <div class="img-preview" id="imgPreview">No photo selected</div>
+        <input type="file" id="image" accept="image/*">
+        <div class="hint">Large photos are compressed automatically before saving.</div>
+        <div class="err-msg">A photo helps receivers trust the donation.</div>
+      </div>
+
+      <button class="btn-primary" id="submitDonationBtn" onclick="addDonation()">Submit donation</button>
+      <button class="btn-secondary" onclick="showTrackPanel()">Track my past donations</button>
+
+      <div id="trackPanel" style="display:none;margin-top:20px;">
+        <div class="divider">track by phone</div>
+        <div class="field">
+          <input id="trackPhone" class="mono" placeholder="Phone number used when donating">
+          <div class="hint">You can type it with or without the country code.</div>
+        </div>
+        <button class="btn-secondary" onclick="trackDonations()">Show my donations</button>
+        <div id="trackResults" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECEIVER LOGIN -->
+  <section class="screen" id="screen-receiverLogin">
+    <div class="card">
+      <button class="back-link" onclick="showScreen('home')">← Back</button>
+      <h2>Account login</h2>
+      <p style="font-size:13.5px;color:#5C6E62;margin-top:-4px;margin-bottom:18px;">Use your organizationname, password, and the mobile number registered in Supabase.</p>
+
+      <div class="field" id="f-ruser">
+        <label>organization name</label>
+        <input id="ruser" placeholder="organization name">
+      </div>
+      <div class="field" id="f-rpass">
+        <label>Password</label>
+        <input id="rpass" type="password" placeholder="Password">
+      </div>
+
+      <div class="field" id="f-rphone">
+        <label>Mobile number</label>
+        <input id="rphone" class="mono" inputmode="tel" placeholder="Enter your registered mobile number">
+        <div class="hint">Admin and receiver login both require the mobile number registered in Supabase.</div>
+      </div>
+
+      <div class="err-msg" id="loginErr" style="display:none;color:var(--clay);font-size:13px;margin-bottom:10px;">Incorrect organization name or password.</div>
+      <button class="btn-primary" id="loginBtn" onclick="receiverLogin()">Log in</button>
+    </div>
+  </section>
+
+  <!-- RECEIVER PANEL -->
+  <section class="screen" id="screen-receiver">
+    <div class="panel-head">
+      <div>
+        <h2>Available donations</h2>
+        <p style="font-size:13.5px;color:#5C6E62;margin:0;">Signed in as <b class="mono" id="receiverName"></b></p>
+      </div>
+      <div class="receiver-top-actions">
+        <div class="password-menu-wrap">
+          <button class="change-password-top-btn" onclick="togglePasswordMenu()">🔐 Change password</button>
+          <div class="password-menu" id="passwordMenu">
+            <div class="password-menu-title">Change password</div>
+            <div class="password-menu-sub">Update your receiver account password.</div>
+
+            <div class="field">
+              <label>Current password</label>
+              <input id="currentReceiverPassword" type="password" placeholder="Enter current password">
+            </div>
+
+            <div class="field">
+              <label>New password</label>
+              <input id="newReceiverPassword" type="password" placeholder="Enter new password">
+            </div>
+
+            <div class="field">
+              <label>Confirm new password</label>
+              <input id="confirmReceiverPassword" type="password" placeholder="Re-enter new password">
+            </div>
+
+            <button class="btn-primary" id="changePasswordBtn" onclick="changeReceiverPassword()">Change password</button>
+            <button class="password-cancel-btn" onclick="togglePasswordMenu(false)">Cancel</button>
+          </div>
+        </div>
+        <button class="btn-secondary receiver-logout-btn" onclick="logout()">Log out</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="available" onclick="setReceiverTab('available')">Available</button>
+      <button class="tab" data-tab="mine" onclick="setReceiverTab('mine')">Accepted by you</button>
+    </div>
+    <div class="filter-row">
+      <input id="receiverSearch" class="filter-search" type="text" placeholder="Search by food, donor or address…" oninput="renderReceiverList()">
+      <select id="receiverCategoryFilter" class="filter-select" onchange="renderReceiverList()">
+        <option value="">All categories</option>
+        <option value="Cooked meals">Cooked meals</option>
+        <option value="Groceries & raw ingredients">Groceries &amp; raw ingredients</option>
+        <option value="Bakery & snacks">Bakery &amp; snacks</option>
+        <option value="Fruits & vegetables">Fruits &amp; vegetables</option>
+        <option value="Dairy & beverages">Dairy &amp; beverages</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div id="receiverList"></div>
+
+  </section>
+
+  <!-- ADMIN PANEL -->
+  <section class="screen" id="screen-adminPanel">
+    <div class="panel-head">
+      <h2>Admin panel</h2>
+      <button class="btn-secondary" style="width:auto;padding:10px 18px;" onclick="logout()">Log out</button>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-box"><b class="mono" id="adminTotal">0</b><span>Total donations</span></div>
+      <div class="stat-box"><b class="mono" id="adminPending">0</b><span>Pending pickup</span></div>
+      <div class="stat-box"><b class="mono" id="adminAccepted">0</b><span>Accepted</span></div>
+      <div class="stat-box"><b class="mono" id="adminReceivers">0</b><span>Receiver accounts</span></div>
+      <div class="stat-box"><b class="mono" id="adminReported">0</b><span>Reported as fake</span></div>
+    </div>
+
+    <div class="card wide" style="margin-left:0;">
+      <h3 style="font-size:17px;">🚩 Reported donations</h3>
+      <p style="font-size:13px;color:#5C6E62;margin-top:-6px;">Flagged by receivers as fake, wrong, or unreachable. Review and dismiss or remove.</p>
+      <div id="reportedListAdmin" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card wide" style="margin-left:0;">
+      <h3 style="font-size:17px;">Receiver activity monitor</h3>
+      <p style="font-size:13px;color:#5C6E62;margin-top:-6px;">
+        Monitor how many donations each receiver has accepted, reported, and currently holds.
+      </p>
+      <div id="receiverMonitorList" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card wide" style="margin-left:0;">
+      <h3 style="font-size:17px;">Add a receiver account</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <div class="field" style="flex:1;min-width:160px;margin-bottom:0;">
+          <input id="newUser" placeholder="organizationname">
+        </div>
+        <div class="field" style="flex:1;min-width:160px;margin-bottom:0;">
+          <input id="newPass" placeholder="Temporary password">
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;margin-bottom:0;">
+        <label>Receiver's phone number</label>
+        <input id="newReceiverPhone" class="mono" inputmode="tel" placeholder="e.g. 9876543210">
+        <div class="hint">Phone is stored for contact only. No OTP is required.</div>
+      </div>
+      <button class="btn-primary" style="width:auto;padding:12px 22px;margin-top:14px;" onclick="addReceiver()">Add</button>
+
+      <div class="divider">receiver accounts</div>
+      <div id="receiverListAdmin"></div>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast-host"></div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
